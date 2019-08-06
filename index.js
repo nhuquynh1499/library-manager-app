@@ -15,11 +15,13 @@ var output = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'O
 function loadDate() {
   dataFile = fs.readFileSync("./data.json");
   data = JSON.parse(dataFile);
+  listOfBook = data.book;
 }
 
 function showMenu() {
   console.log("0. Show all books");
   console.log("1. Create a book");
+  console.log("3. Search a book");
   var option = readlineSync.question("> ");
   switch (option) {
     case '0':
@@ -29,6 +31,7 @@ function showMenu() {
       showCreateBook();
       showMenu();
       break;
+    
     default:
       console.log("Option wrong");
       showMenu();
@@ -38,7 +41,7 @@ function showMenu() {
 
 function showAllBooks() {
   var list = [];
-  for (var book of data) {
+  for (var book of data.book) {
     list.push([
       book.id,
       book.name,
@@ -62,8 +65,9 @@ function showCreateBook() {
   newBook.borrowedDay = null;
   newBook.paidDay = null;
   newBook.overTime = null;
-  data.push(newBook);
+  data.book.push(newBook);
 }
+
 
 function run() {
   loadDate();
