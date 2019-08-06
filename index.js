@@ -10,7 +10,8 @@ var readlineSync = require('readline-sync');
 const { table } = require('table');
 
 var data = [];
-var output = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']];
+var titleOfColumnBook = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']]
+var output;
 
 function loadDate() {
   dataFile = fs.readFileSync("./data.json");
@@ -21,7 +22,7 @@ function loadDate() {
 function showMenu() {
   console.log("0. Show all books");
   console.log("1. Create a book");
-  console.log("3. Search a book");
+  console.log("2. Search a book");
   var option = readlineSync.question("> ");
   switch (option) {
     case '0':
@@ -31,7 +32,16 @@ function showMenu() {
       showCreateBook();
       showMenu();
       break;
-    
+    case '2':
+      var result = showSearchBook();
+      if (result !== []) {
+        output = table(titleOfColumnBook.concat(result));
+        console.log(output);
+      } else {
+        console.log("No book");
+      };
+      showMenu();
+      break;
     default:
       console.log("Option wrong");
       showMenu();
@@ -51,7 +61,7 @@ function showAllBooks() {
       book.paidDay,
       book.overTime]);
   }
-  output = table(output.concat(list));
+  output = table(titleOfColumnBook.concat(list));
   console.log(output);
 }
 
@@ -68,6 +78,25 @@ function showCreateBook() {
   data.book.push(newBook);
 }
 
+function showSearchBook() {
+  var arrResult = []
+  var needSearch = readlineSync.question("> Search: ");
+  for (var book of data.book) {
+    var resultSearch = book.name.toLowerCase().indexOf(needSearch.toLowerCase());
+    if (resultSearch !== -1) {
+      arrResult.push([
+        book.id,
+        book.name,
+        book.situation,
+        book.user,
+        book.borrowedDay,
+        book.paidDay,
+        book.overTime,
+      ]);
+    } 
+  }
+  return arrResult
+}
 
 function run() {
   loadDate();
