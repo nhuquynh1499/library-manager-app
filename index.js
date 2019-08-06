@@ -108,7 +108,14 @@ function showCreateBook() {
   data.book.push(newBook);
 }
 
-
+function showCreateUser() {
+  var name = readlineSync.question('> The name of user: ');
+  var newUser = {};
+  newUser.id = data.user.length;
+  newUser.name = name;
+  newUser.book = [];
+  data.user.push(newUser);
+}
 
 function showSearchBook() {
   var arrResult = []
