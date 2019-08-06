@@ -20,8 +20,8 @@
     }
   ],
   "user": [
-    {"id": 0, "name": "Nhu Quynh"},
-    {"id": 1, "name": "Thanh Ton"},
-    {"id": 2, "name": "Hong Quang"}
+    {"id": 0, "name": "Nhu Quynh", "book": []},
+    {"id": 1, "name": "Thanh Ton", "book": []},
+    {"id": 2, "name": "Hong Quang", "book": []}
   ]
 }
