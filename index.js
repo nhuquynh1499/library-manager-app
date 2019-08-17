@@ -25,7 +25,10 @@ function showMenu() {
     case '0':
       showAllBooks();
       break;
-    
+    case '1':
+      showCreateBook();
+      showMenu();
+      break;
     default:
       console.log("Option wrong");
       showMenu();
@@ -47,6 +50,19 @@ function showAllBooks() {
   }
   output = table(output.concat(list));
   console.log(output);
+}
+
+function showCreateBook() {
+  var name = readlineSync.question("> The name of book: ");
+  var newBook = {};
+  newBook.id = data.length;
+  newBook.name = name;
+  newBook.situation = true;
+  newBook.user = null;
+  newBook.borrowedDay = null;
+  newBook.paidDay = null;
+  newBook.overTime = null;
+  data.push(newBook);
 }
 
 function run() {
