@@ -55,12 +55,23 @@ function showMenu() {
         output = table(titleOfColumnBook.concat(result));
         console.log(output);
       } else {
-        console.log("No book");
-      };
+        console.log('No book');
+      }
       showMenu();
       break;
+    case '5':
+      var result = showSearchUser();
+      if (result !== []) {
+        output = table(titleOfColumnUser.concat(result));
+        console.log(output);
+      } else {
+        console.log('No user');
+      }
+      showMenu();
+      break;
+    
     default:
-      console.log("Option wrong");
+      console.log('Option wrong');
       showMenu();
       break;
   }
@@ -135,6 +146,22 @@ function showSearchBook() {
     } 
   }
   return arrResult
+}
+
+function showSearchUser() {
+  var arrResult = [];
+  var needSearch = readlineSync.question('> Search: ');
+  for (var user of data.user) {
+    var resultSearch = user.name.toLowerCase().indexOf(needSearch.toLowerCase());
+    if (resultSearch !== -1) {
+      arrResult.push([
+        user.id,
+        user.name,
+        user.book
+      ]);
+    }
+  }
+  return arrResult;
 }
 
 function run() {
