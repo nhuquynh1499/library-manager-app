@@ -10,46 +10,67 @@ var readlineSync = require('readline-sync');
 const { table } = require('table');
 
 var data = [];
-var titleOfColumnBook = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']];
-var titleOfColumnUser = [['Id', 'Name', 'Borrowed Book']];
+var titleOfColumnList = [['Id', 'The name of Book', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']];
+var titleOfColumnBook = [['Id', 'The name of Book', 'Status', 'User']];
+var titleOfColumnUser = [['Id', 'The name of User', 'Borrowed Book (name, overtime)']];
 var output;
 
 function loadDate() {
   dataFile = fs.readFileSync("./data.json");
   data = JSON.parse(dataFile);
-  listOfBook = data.book;
+}
+
+function updateOverTime() {
+  for (list of data.list) {
+    list.overTime = countOverTime(list.borrowedDay, list.paidDay);
+    var overTime = list.overTime;
+    for (user of data.user) {
+      for (item of user.book) {
+        if (item.nameBook === list.nameBook)
+          item.overTime = overTime;
+      }
+    }
+  }
 }
 
 function showMenu() {
-  console.log("0. Show all books");
-  console.log("1. Show all user");
-  console.log("2. Create a book");
-  console.log("3. Create a user");
-  console.log("4. Search a book");
-  console.log("5. Search a user");
-  console.log("6. Borrow a book");
-  console.log("7. Pay a book");
-  console.log("8. Delete a book");
-  console.log("9. Delete a user");
-  console.log("10. Save and Exit");
+  console.log("0. Show all list of library.")
+  console.log("1. Show all books");
+  console.log("2. Show all user");
+  console.log("3. Create a book");
+  console.log("4. Create a user");
+  console.log("5. Search a book");
+  console.log("6. Search a user");
+  console.log("7. Borrow a book");
+  console.log("8. Pay a book");
+  console.log("9. Delete a book");
+  console.log("10. Delete a user");
+  console.log("11. Save and Exit");
   var option = readlineSync.question("> ");
   switch (option) {
     case '0':
-      showAllBooks();
+      showAllList();
       showMenu();
       break;
     case '1':
-      showAllUser();
+      showAllBooks();
       showMenu();
       break;
     case '2':
-      showCreateBook();
+      showAllUser();
       showMenu();
       break;
     case '3':
-      showCreateUser();
+      showCreateBook();
+      showMenu();
       break;
     case '4':
+      var name = readlineSync.question('> The name of user: ');
+      var overTime = null
+      showCreateUser(name, "", overTime);
+      showMenu();
+      break;
+    case '5':
       var result = showSearchBook();
       if (result !== []) {
         output = table(titleOfColumnBook.concat(result));
@@ -59,7 +80,7 @@ function showMenu() {
       }
       showMenu();
       break;
-    case '5':
+    case '6':
       var result = showSearchUser();
       if (result !== []) {
         output = table(titleOfColumnUser.concat(result));
@@ -69,13 +90,24 @@ function showMenu() {
       }
       showMenu();
       break;
+    case '7':
+      showBorrowBook();
+      showMenu();
+      break;
     case '8':
-      showDeleteBook();
+      showPayBook();
       showMenu();
       break;
     case '9':
+      showDeleteBook();
+      showMenu();
+      break;
+    case '10':
       showDeleteUser();
       showMenu();
+      break;
+    case '11':
+      saveAndExit()
       break;
     default:
       console.log('Option wrong');
@@ -84,17 +116,31 @@ function showMenu() {
   }
 }
 
+function showAllList() {
+  var list = [];
+  for (var item of data.list) {
+    list.push([
+      item.id,
+      item.nameBook,
+      item.user,
+      item.borrowedDay,
+      item.paidDay,
+      item.overTime,
+    ]);
+  }
+  output = table(titleOfColumnList.concat(list));
+  console.log(output);
+}
+
 function showAllBooks() {
   var list = [];
   for (var book of data.book) {
     list.push([
       book.id,
-      book.name,
-      book.situation,
+      book.nameBook,
+      book.status,
       book.user,
-      book.borrowedDay,
-      book.paidDay,
-      book.overTime]);
+    ]);
   }
   output = table(titleOfColumnBook.concat(list));
   console.log(output);
@@ -102,53 +148,72 @@ function showAllBooks() {
 
 function showAllUser() {
   var list = [];
+  var count = 0;
   for (var user of data.user) {
+    var infoBorrowedBook = []
+    if (user.book !== []) {
+      for (var itemBook of user.book) {
+        var valueOfInfoBook = itemBook;
+        for (var key in valueOfInfoBook) {
+          infoBorrowedBook.push(valueOfInfoBook[key]);
+        }
+      }
+    }
     list.push([
       user.id,
-      user.name,
-      user.book
+      user.userName,
+      infoBorrowedBook
     ]);
   }
   output = table(titleOfColumnUser.concat(list));
   console.log(output);
 }
 
+function showCreateList(book, user) {
+  var newItem = {};
+  newItem.id = data.list.length;
+  newItem.nameBook = UpperCaseFirst(book);
+  newItem.user = UpperCaseFirst(user);
+  newItem.borrowedDay = new Date(Date.now());
+  newItem.paidDay = null;
+  newItem.overTime = countOverTime(newItem.borrowedDay.getTime(), null);
+  data.list.push(newItem);
+};
+
 function showCreateBook() {
-  var name = readlineSync.question("> The name of book: ");
+  var name = UpperCaseFirst(readlineSync.question('> The name of book: '));
   var newBook = {};
   newBook.id = data.book.length;
-  newBook.name = name;
-  newBook.situation = true;
+  newBook.nameBook = name;
+  newBook.status = true;
   newBook.user = null;
-  newBook.borrowedDay = null;
-  newBook.paidDay = null;
-  newBook.overTime = null;
   data.book.push(newBook);
 }
 
-function showCreateUser() {
-  var name = readlineSync.question('> The name of user: ');
+function showCreateUser(userName, nameBook, overTime) {
   var newUser = {};
   newUser.id = data.user.length;
-  newUser.name = name;
-  newUser.book = [];
+  newUser.userName = UpperCaseFirst(userName);
+  //newUser.book = [{ "nameBook": nameBook, "overTime": overTime }];
+  if (nameBook !== "") {
+    newUser.book = [{ nameBook: nameBook, overTime: overTime }];
+  } else {
+    newUser.book = [];
+  }
   data.user.push(newUser);
 }
 
 function showSearchBook() {
   var arrResult = []
-  var needSearch = readlineSync.question("> Search: ");
+  var needSearch = UpperCaseFirst(readlineSync.question("> Search: "));
   for (var book of data.book) {
-    var resultSearch = book.name.toLowerCase().indexOf(needSearch.toLowerCase());
+    var resultSearch = UpperCaseFirst(book.nameBook).indexOf(needSearch);
     if (resultSearch !== -1) {
       arrResult.push([
         book.id,
-        book.name,
-        book.situation,
+        UpperCaseFirst(book.nameBook),
+        book.status,
         book.user,
-        book.borrowedDay,
-        book.paidDay,
-        book.overTime,
       ]);
     } 
   }
@@ -157,14 +222,20 @@ function showSearchBook() {
 
 function showSearchUser() {
   var arrResult = [];
-  var needSearch = readlineSync.question('> Search: ');
+  var count = 0;
+  var needSearch = UpperCaseFirst(readlineSync.question('> Search: '));
   for (var user of data.user) {
-    var resultSearch = user.name.toLowerCase().indexOf(needSearch.toLowerCase());
+    var resultSearch = UpperCaseFirst(user.userName).indexOf(needSearch);
     if (resultSearch !== -1) {
+      var infoBorrowedBook = [];
+      var valueOfInfoBook = user.book[count++];
+      for (var key in valueOfInfoBook) {
+        infoBorrowedBook.push(valueOfInfoBook[key]);
+      }
       arrResult.push([
         user.id,
-        user.name,
-        user.book
+        UpperCaseFirst(user.userName),
+        infoBorrowedBook,
       ]);
     }
   }
@@ -183,7 +254,7 @@ function showDeleteBook() {
       for (var book of data.book)
         for (var item of needDelete)
           if (book.id == item[0])
-            if (book.situation === true) {
+            if (book.status === true) {
               data.book.splice(data.book.indexOf(book), 1);
               console.log("Deleted.");
             } else {
@@ -219,9 +290,129 @@ function showDeleteUser() {
   }
 }
 
+function showBorrowBook() {
+  var needBorrow = showSearchBook();
+  if (needBorrow !== []) {
+    output = table(titleOfColumnBook.concat(needBorrow));
+    console.log(output);
+    var choice = readlineSync.question('Do you want to borrow this book? (Y/N)');
+    if (choice === 'N') {
+      return -1;
+    } else {
+      for (var book of data.book)
+        for (var item of needBorrow)
+          if (book.id == item[0])
+            if (book.status === true) {
+              book.status = false;
+              var infoOfUser = UpperCaseFirst(readlineSync.question("Input borrower's name: "));
+              book.user = infoOfUser;
+              showCreateList(item[1], infoOfUser);
+              // // var result = 0;
+              for (var list of data.list) {
+                if (list.user === infoOfUser) {
+                  var overTime = list.overTime;
+                }
+              }
+              var count = 0;
+              for (var user of data.user) {
+                if (user.userName == infoOfUser) {
+                  count++;
+                  infoBook = { nameBook: item[1], overTime: overTime };
+                  createBookintoUser(user.id, infoBook);
+                }
+              }
+              if (count === 0) {
+                showCreateUser(infoOfUser, item[1], overTime);
+              }
+            } else {
+              console.log("The book has been borrowed.");
+            };
+    }
+  } else {
+    console.log("No book");
+  }
+} 
+
+function showPayBook() {
+  var needPay = showSearchBook();
+  if (needPay !== []) {
+    output = table(titleOfColumnBook.concat(needPay));
+    console.log(output);
+    var choice = readlineSync.question('Do you want to pay this book? (Y/N)');
+    if (choice === 'N') {
+      return -1;
+    } else {
+      for (item of needPay) {
+        console.log(item);
+        if (item[2] !== true) {
+          for (book of data.book) {
+            if (book.nameBook === item[1]) {
+              book.status = true;
+              book.user = null;
+              for (list of data.list) {
+                if (list.nameBook === item[1]) {
+                  payAList(list.id);
+                }
+              }
+            }
+          }
+        } else {
+          console.log("The book hasn't been borrowed");
+        }
+      }
+    }
+  } else {
+    console.log("No book");
+  }
+}
+
+function saveAndExit() {
+  var resultData = JSON.stringify(data);
+  fs.writeFileSync('./data.json', resultData);
+}
+
+function payAList(id) {
+  data.list[id].paidDay = new Date(Date.now());
+  data.list[id].overTime = countOverTime(data.list[id].borrowedDay, data.list[id].paidDay.getTime());
+}
+
+function createBookintoUser(id, book) {
+  console.log(data.user[id]);
+  data.user[id].book.push(book);
+}
+
+function countOverTime(timeBorrow, timePaid) {
+  var borrowDay = new Date(timeBorrow);
+  var result;
+  if (timePaid === null) {
+    var countOfDay = Math.floor((Date.now() - borrowDay.getTime()) / (24 * 60 * 60 * 1000));
+    if (countOfDay > 30) {
+      result = countOfDay - 30;
+    } else {
+      result = false;
+    }
+  } else {
+    var paidDay = new Date(timePaid);
+    var countOfDay = Math.floor((paidDay.getTime() - borrowDay.getTime()) / (24 * 60 * 60 * 1000));
+    if (countOfDay > 30) {
+      result = countOfDay - 30;
+    } else {
+      result = false;
+    }
+  }
+  return result;
+}
+
+function UpperCaseFirst(string) {
+  return string.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+}
+
 function run() {
   loadDate();
+  updateOverTime();
   showMenu();
 }
 
 run();
+
+
