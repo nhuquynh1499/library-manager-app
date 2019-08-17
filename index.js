@@ -73,6 +73,10 @@ function showMenu() {
       showDeleteBook();
       showMenu();
       break;
+    case '9':
+      showDeleteUser();
+      showMenu();
+      break;
     default:
       console.log('Option wrong');
       showMenu();
@@ -178,13 +182,40 @@ function showDeleteBook() {
     } else {
       for (var book of data.book)
         for (var item of needDelete)
-          if (book.name == item[1]) {
-            data.book.splice(data.book.indexOf(book), 1);
-            console.log("Deleted.");
-          }
+          if (book.id == item[0])
+            if (book.situation === true) {
+              data.book.splice(data.book.indexOf(book), 1);
+              console.log("Deleted.");
+            } else {
+              console.log("The book has been borrowed. Don't delete");
+            }
     }
   } else {
     console.log('No book');
+  }
+}
+
+function showDeleteUser() {
+  var needDelete = showSearchUser();
+  if (needDelete !== []) {
+    output = table(titleOfColumnUser.concat(needDelete));
+    console.log(output);
+    var choice = readlineSync.question('Do you delete the user? (Y/N)');
+    if (choice === 'N') {
+      return -1;
+    } else {
+      for (var user of data.user)
+        for (var item of needDelete)
+          if (user.id == item[0])
+            if (user.book !== []) {
+              data.user.splice(data.user.indexOf(user), 1);
+              console.log('Deleted.');
+            } else {
+              console.log("User has borrowed a book. Don't delete.");
+            }
+    }
+  } else {
+    console.log('No user');
   }
 }
 
