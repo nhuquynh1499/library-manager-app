@@ -69,7 +69,10 @@ function showMenu() {
       }
       showMenu();
       break;
-    
+    case '8':
+      showDeleteBook();
+      showMenu();
+      break;
     default:
       console.log('Option wrong');
       showMenu();
@@ -162,6 +165,27 @@ function showSearchUser() {
     }
   }
   return arrResult;
+}
+
+function showDeleteBook() {
+  var needDelete = showSearchBook();
+  if (needDelete !== []) {
+    output = table(titleOfColumnBook.concat(needDelete));
+    console.log(output);
+    var choice = readlineSync.question("Do you delete the book? (Y/N)");
+    if (choice === "N") {
+      return -1;
+    } else {
+      for (var book of data.book)
+        for (var item of needDelete)
+          if (book.name == item[1]) {
+            data.book.splice(data.book.indexOf(book), 1);
+            console.log("Deleted.");
+          }
+    }
+  } else {
+    console.log('No book');
+  }
 }
 
 function run() {
