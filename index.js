@@ -10,7 +10,8 @@ var readlineSync = require('readline-sync');
 const { table } = require('table');
 
 var data = [];
-var titleOfColumnBook = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']]
+var titleOfColumnBook = [['Id', 'Name', 'Situation', 'User', 'Borrowed Day', 'Paid Day', 'Overtime']];
+var titleOfColumnUser = [['Id', 'Name', 'Borrowed Book']];
 var output;
 
 function loadDate() {
@@ -21,18 +22,34 @@ function loadDate() {
 
 function showMenu() {
   console.log("0. Show all books");
-  console.log("1. Create a book");
-  console.log("2. Search a book");
+  console.log("1. Show all user");
+  console.log("2. Create a book");
+  console.log("3. Create a user");
+  console.log("4. Search a book");
+  console.log("5. Search a user");
+  console.log("6. Borrow a book");
+  console.log("7. Pay a book");
+  console.log("8. Delete a book");
+  console.log("9. Delete a user");
+  console.log("10. Save and Exit");
   var option = readlineSync.question("> ");
   switch (option) {
     case '0':
       showAllBooks();
+      showMenu();
       break;
     case '1':
-      showCreateBook();
+      showAllUser();
       showMenu();
       break;
     case '2':
+      showCreateBook();
+      showMenu();
+      break;
+    case '3':
+      showCreateUser();
+      break;
+    case '4':
       var result = showSearchBook();
       if (result !== []) {
         output = table(titleOfColumnBook.concat(result));
@@ -65,10 +82,23 @@ function showAllBooks() {
   console.log(output);
 }
 
+function showAllUser() {
+  var list = [];
+  for (var user of data.user) {
+    list.push([
+      user.id,
+      user.name,
+      user.book
+    ]);
+  }
+  output = table(titleOfColumnUser.concat(list));
+  console.log(output);
+}
+
 function showCreateBook() {
   var name = readlineSync.question("> The name of book: ");
   var newBook = {};
-  newBook.id = data.length;
+  newBook.id = data.book.length;
   newBook.name = name;
   newBook.situation = true;
   newBook.user = null;
@@ -77,6 +107,8 @@ function showCreateBook() {
   newBook.overTime = null;
   data.book.push(newBook);
 }
+
+
 
 function showSearchBook() {
   var arrResult = []
